@@ -19,8 +19,7 @@ server.get("*.br", (req, res, next) => {
 });
 
 // Serve static files from the buildWeb directory
-
-server.use(express.static(path.join(__dirname, "Build")));
+server.use(express.static(path.join(__dirname, "buildWeb")));
 
 // Telegram bot handlers
 bot.onText(/help/, (msg) => bot.sendMessage(msg.from.id, "Say /game if you want to play."));
