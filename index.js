@@ -1,31 +1,27 @@
 const express = require("express");
 const path = require("path");
 const TelegramBot = require("node-telegram-bot-api");
+
 const TOKEN = "7710206652:AAHXjEntNWWxyhKG2crdP7-X89-hGhRgKG0";
 const server = express();
-const bot = new TelegramBot(TOKEN, { polling: true });
+const bot = new TelegramBot(TOKEN, {
+    polling: true
+});
 const port = process.env.PORT || 5000;
 const gameName = "ludo_social_prototype";
 const queries = {};
 
-// Serve Brotli files with appropriate headers
+// Middleware to serve Brotli-compressed files with the correct headers
 server.get("*.br", (req, res, next) => {
-    console.log(`Serving Brotli file: ${req.url}`);
-    const filePath = path.join(__dirname, "buildWeb", req.url);
-    res.setHeader("Content-Encoding", "br");
-    res.setHeader("Content-Type", "application/octet-stream"); // Adjust MIME type if necessary
-    res.sendFile(filePath, (err) => {
-        if (err) {
-            console.error("Error serving Brotli file:", err);
-            next(err);
-        }
-    });
+    res.set("Content-Encoding", "br");
+    res.set("Content-Type", "application/octet-stream"); // Adjust MIME type as needed
+    next();
 });
 
-// Serve other static files
-server.use(express.static(path.join(__dirname, "buildWeb")));
+// Serve static files from the buildWeb directory
+server.use(express.static(__dirname));
 
-// Telegram bot setup
+// Telegram bot handlers
 bot.onText(/help/, (msg) => bot.sendMessage(msg.from.id, "Say /game if you want to play."));
 bot.onText(/start|game/, (msg) => bot.sendGame(msg.from.id, gameName));
 bot.on("callback_query", function (query) {
@@ -47,6 +43,8 @@ bot.on("inline_query", function (iq) {
         game_short_name: gameName
     }]);
 });
+
+// Endpoint to update high scores
 server.get("/highscore/:score", function (req, res, next) {
     if (!Object.hasOwnProperty.call(queries, req.query.id)) return next();
     let query = queries[req.query.id];
@@ -61,9 +59,12 @@ server.get("/highscore/:score", function (req, res, next) {
             inline_message_id: query.inline_message_id
         };
     }
-    bot.setGameScore(query.from.id, parseInt(req.params.score), options,
-        function (err, result) {});
+    bot.setGameScore(query.from.id, parseInt(req.params.score), options, function (err, result) {
+        if (err) console.error(err);
+    });
 });
+
+// Start the server
 server.listen(port, () => {
     console.log(`Server is running on port ${port}`);
 });
