@@ -8,22 +8,21 @@ const port = process.env.PORT || 5000;
 const gameName = "ludo_social_prototype";
 const queries = {};
 
-// Serve Brotli files with appropriate headers
-server.get("*.br", (req, res, next) => {
-    console.log(`Serving Brotli file: ${req.url}`);
-    const filePath = path.join(__dirname, "buildWeb", req.url);
-    res.setHeader("Content-Encoding", "br");
-    res.setHeader("Content-Type", "application/octet-stream"); // Adjust MIME type if necessary
-    res.sendFile(filePath, (err) => {
-        if (err) {
-            console.error("Error serving Brotli file:", err);
-            next(err);
-        }
-    });
-});
+const serveStatic = require("serve-static");
 
-// Serve other static files
-server.use(express.static(path.join(__dirname, "buildWeb")));
+// Serve Brotli files
+server.use(
+    "/",
+    serveStatic(path.join(__dirname, "buildWeb"), {
+        setHeaders: (res, path) => {
+            if (path.endsWith(".br")) {
+                res.setHeader("Content-Encoding", "br");
+                res.setHeader("Content-Type", "application/octet-stream");
+            }
+        }
+    })
+);
+
 
 // Telegram bot setup
 bot.onText(/help/, (msg) => bot.sendMessage(msg.from.id, "Say /game if you want to play."));
