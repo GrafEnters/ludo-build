@@ -8,16 +8,19 @@ const port = process.env.PORT || 5000;
 const gameName = "ludo_social_prototype";
 const queries = {};
 
-// Middleware to set Content-Encoding for Brotli-compressed files
-server.use((req, res, next) => {
-    if (req.url.endsWith(".br")) {
-        res.set("Content-Encoding", "br");
-        res.set("Content-Type", "application/octet-stream"); // Adjust type if necessary
-    }
-    next();
+// Serve Brotli files with appropriate headers
+server.get("*.br", (req, res, next) => {
+    const filePath = path.join(__dirname, "buildWeb", req.url);
+    res.setHeader("Content-Encoding", "br");
+    res.setHeader("Content-Type", "application/octet-stream"); // Adjust MIME type if needed
+    res.sendFile(filePath, (err) => {
+        if (err) {
+            next(err);
+        }
+    });
 });
 
-// Serve static files
+// Serve other static files
 server.use(express.static(path.join(__dirname, "buildWeb")));
 
 // Telegram bot setup
