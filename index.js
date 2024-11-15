@@ -10,11 +10,13 @@ const queries = {};
 
 // Serve Brotli files with appropriate headers
 server.get("*.br", (req, res, next) => {
+    console.log(`Serving Brotli file: ${req.url}`);
     const filePath = path.join(__dirname, "buildWeb", req.url);
     res.setHeader("Content-Encoding", "br");
-    res.setHeader("Content-Type", "application/octet-stream"); // Adjust MIME type if needed
+    res.setHeader("Content-Type", "application/octet-stream"); // Adjust MIME type if necessary
     res.sendFile(filePath, (err) => {
         if (err) {
+            console.error("Error serving Brotli file:", err);
             next(err);
         }
     });
